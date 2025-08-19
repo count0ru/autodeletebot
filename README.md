@@ -1,12 +1,12 @@
 # Auto-Delete Telegram Bot
 
-A Python-based Telegram bot that automatically deletes messages from your channel after 30 days. Perfect for managing content lifecycle and keeping your channel clean.
+A Python-based Telegram bot that automatically deletes messages from your channel after 60 days. Perfect for managing content lifecycle and keeping your channel clean.
 
 ## Features
 
-- 🤖 **Automatic Deletion**: Messages are automatically deleted after 30 days
+- 🤖 **Automatic Deletion**: Messages are automatically deleted after 60 days
 - 📱 **Easy Setup**: Just forward messages from your channel to the bot
-- ⏰ **Scheduled Cleanup**: Runs every 12 hours via cron job
+- ⏰ **Scheduled Cleanup**: Runs every 720 minutes (12 hours) via cron job
 - 💾 **Database Storage**: SQLite database tracks all scheduled deletions
 - 📊 **Status Monitoring**: Check bot status and message counts
 - 🧹 **Automatic Cleanup**: Removes old database records
@@ -15,8 +15,8 @@ A Python-based Telegram bot that automatically deletes messages from your channe
 ## How It Works
 
 1. **Forward Messages**: Forward any message from your Telegram channel to the bot
-2. **Automatic Scheduling**: The bot schedules the message for deletion after 30 days
-3. **Scheduled Cleanup**: A cron job runs every 12 hours to delete expired messages
+2. **Automatic Scheduling**: The bot schedules the message for deletion after 60 days
+3. **Scheduled Cleanup**: A cron job runs every 720 minutes (12 hours) to delete expired messages
 4. **Database Management**: All operations are logged and tracked in a SQLite database
 5. **User Notifications**: You receive private messages about successful deletions and failures
 
@@ -142,8 +142,8 @@ autodeletebot/
 
 You can customize the bot behavior by editing `config.py` or setting environment variables:
 
-- `DELETE_AFTER_DAYS`: How long to wait before deleting messages (default: 30)
-- `CHECK_INTERVAL_HOURS`: How often to check for expired messages (default: 12)
+- `DELETE_AFTER_DAYS`: How long to wait before deleting messages (default: 60)
+- `CHECK_INTERVAL_MINUTES`: How often to check for expired messages in minutes (default: 720)
 - `LOG_LEVEL`: Logging level (default: INFO)
 - `USER_ID`: Your Telegram user ID for deletion notifications
 - `USER_USERNAME`: Your Telegram username for deletion notifications

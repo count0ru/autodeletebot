@@ -7,15 +7,23 @@ import config
 
 def setup_logging():
     """Configure logging for the application."""
-    logging.basicConfig(
-        level=getattr(logging, config.LOG_LEVEL),
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler(config.LOG_FILE),
-            logging.StreamHandler()
-        ]
-    )
-    return logging.getLogger(__name__)
+    # Create formatter
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+    # Create handlers
+    file_handler = logging.FileHandler(config.LOG_FILE)
+    file_handler.setFormatter(formatter)
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+
+    # Configure logger
+    logger = logging.getLogger(__name__)
+    logger.setLevel(getattr(logging, config.LOG_LEVEL))
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+
+    return logger
 
 
 async def send_deletion_notification(bot, message_id: int, chat_id: int, success: bool, error_msg: str = None):

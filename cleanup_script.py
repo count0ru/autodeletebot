@@ -7,6 +7,9 @@ This script can be run via cron every 12 hours to delete expired messages.
 import asyncio
 import sys
 import os
+
+from telegram import Bot
+
 import config
 from database import MessageDatabase
 from utils import setup_logging, delete_message_notify
@@ -20,8 +23,6 @@ logger = setup_logging()
 async def cleanup_expired_messages():
     """Clean up expired messages from the channel"""
     try:
-        from telegram import Bot
-
         # Initialize bot and database
         bot = Bot(token=config.BOT_TOKEN)
         db = MessageDatabase(config.DATABASE_PATH)
