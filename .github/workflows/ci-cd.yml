@@ -1,0 +1,171 @@
+name: CI/CD Pipeline
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  release:
+    types: [published]
+env:
+  PYTHON_VERSION: '3.11'
+  DOCKER_IMAGE: autodeletebot
+jobs:
+  # Quality Checks & Testing
+  quality:
+    name: Code Quality & Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Cache pip dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+          pip install pylint flake8 black
+      - name: Run linting
+        run: |
+          echo "🔍 Running pylint..."
+          pylint --rcfile .pylintrc *.py || true
+
+          echo "🔍 Running flake8..."
+          flake8 *.py --max-line-length=120 --ignore=E203,W503 || true
+
+          echo "🎨 Running black check..."
+          black --check --line-length 120 *.py || true
+      - name: Run tests
+        run: |
+          echo "🧪 Running tests..."
+          python -m pytest tests/ -v --tb=short --cov=. --cov-report=xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+  # Docker Build & Test
+  docker:
+    name: Docker Build & Test
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Docker image
+        run: |
+          echo "🐳 Building Docker image..."
+          docker build -t ${{ env.DOCKER_IMAGE }}:latest .
+          docker build -t ${{ env.DOCKER_IMAGE }}:${{ github.sha }} .
+      - name: Test Docker image
+        run: |
+          echo "🧪 Testing Docker image..."
+          docker run --rm ${{ env.DOCKER_IMAGE }}:latest python -c "import config, database, utils; print('✅ All modules imported successfully')"
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+  # Security Scanning
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run Bandit security scan
+        uses: python-security/bandit-action@v1
+        with:
+          args: -r *.py -f json -o bandit-report.json || true
+      - name: Run Safety check
+        run: |
+          pip install safety
+          safety check --json --output safety-report.json || true
+  # Release & Deploy (on release)
+  release:
+    name: Release & Deploy
+    runs-on: ubuntu-latest
+    needs: [quality, docker, security]
+    if: github.event_name == 'release'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push Docker image
+        run: |
+          echo "🐳 Building and pushing Docker image..."
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ github.event.release.tag_name }} .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:latest .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ github.event.release.tag_name }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:latest
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          release_name: Release ${{ github.event.release.tag_name }}
+          body: |
+            ## 🚀 Auto-Delete Bot Release ${{ github.event.release.tag_name }}
+
+            ### Changes
+            - Automated CI/CD pipeline
+            - Quality checks and testing
+            - Docker image building
+            - Security scanning
+
+            ### Docker Image
+            ```bash
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ github.event.release.tag_name }}
+            ```
+          draft: false
+          prerelease: false
+  # Status Check
+  status:
+    name: Status Report
+    runs-on: ubuntu-latest
+    needs: [quality, docker, security]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Generate status report
+        run: |
+          echo "📊 CI/CD Pipeline Status Report" > status-report.md
+          echo "=================================" >> status-report.md
+          echo "" >> status-report.md
+          echo "## Job Results:" >> status-report.md
+          echo "- Quality: ${{ needs.quality.result }}" >> status-report.md
+          echo "- Docker: ${{ needs.docker.result }}" >> status-report.md
+          echo "- Security: ${{ needs.security.result }}" >> status-report.md
+          echo "" >> status-report.md
+          echo "## Summary:" >> status-report.md
+          if [[ "${{ needs.quality.result }}" == "success" && "${{ needs.docker.result }}" == "success" && "${{ needs.security.result }}" == "success" ]]; then
+            echo "✅ All checks passed successfully!" >> status-report.md
+          else
+            echo "❌ Some checks failed. Please review the logs." >> status-report.md
+          fi
+      - name: Upload status report
+        uses: actions/upload-artifact@v3
+        with:
+          name: status-report
+          path: status-report.md

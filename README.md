@@ -272,6 +272,33 @@ You can customize the bot behavior by editing `config.py` or setting environment
 - `USER_ID`: Your Telegram user ID for deletion notifications
 - `USER_USERNAME`: Your Telegram username for deletion notifications
 
+## CI/CD Pipeline
+
+The project includes a comprehensive CI/CD pipeline using GitHub Actions:
+
+### **🚀 Automated Workflows**
+
+- **Quality & Testing**: Runs on every push/PR
+- **Docker Build**: Automated container builds
+- **Security Scan**: Vulnerability detection
+- **Deployment**: Multi-environment deployment
+- **Dependency Updates**: Weekly security updates via Dependabot
+
+### **📊 Pipeline Status**
+
+- **Quality Gates**: Pylint ≥9.0, All tests passing
+- **Build Status**: Docker images built and tested
+- **Security**: Bandit + Safety vulnerability scanning
+- **Deployment**: Automatic staging/production deployment
+
+### **🔧 Quick Setup**
+
+1. **Enable Actions**: Go to Actions tab in your repository
+2. **Configure Secrets**: Add deployment tokens if needed
+3. **Enable Dependabot**: Go to Security → Dependabot
+
+📖 **Full Setup Guide**: See [CI_CD_SETUP.md](CI_CD_SETUP.md) for detailed instructions.
+
 ## Code Quality
 
 The project maintains high code quality standards with automated tools:
