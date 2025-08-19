@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Cache pip dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
@@ -73,7 +73,7 @@ jobs:
           echo "🧪 Testing Docker image..."
           docker run --rm ${{ env.DOCKER_IMAGE }}:latest python -c "import config, database, utils; print('✅ All modules imported successfully')"
       - name: Cache Docker layers
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -128,7 +128,7 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:${{ github.event.release.tag_name }}
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.DOCKER_IMAGE }}:latest
       - name: Create GitHub Release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -186,7 +186,7 @@ jobs:
             fi
           fi
       - name: Upload status report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: status-report
           path: status-report.md
