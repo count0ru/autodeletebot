@@ -1,0 +1,27 @@
+# Systemd service file for Auto-Delete Telegram Bot
+# Copy this to /etc/systemd/system/autodeletebot.service
+
+[Unit]
+Description=Auto-Delete Telegram Bot
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=your_username
+WorkingDirectory=/path/to/autodeletebot
+Environment=PATH=/path/to/autodeletebot/venv/bin
+ExecStart=/path/to/autodeletebot/venv/bin/python /path/to/autodeletebot/telegram_bot.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+
+# To enable and start the service:
+# sudo systemctl daemon-reload
+# sudo systemctl enable autodeletebot
+# sudo systemctl start autodeletebot
+# sudo systemctl status autodeletebot
