@@ -44,13 +44,12 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
-      - name: Build and push Docker image
+      - name: Build Docker image (local only)
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          push: false
+          tags: ${{ env.DOCKER_IMAGE }}:latest,${{ env.DOCKER_IMAGE }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Deploy to staging
@@ -58,7 +57,13 @@ jobs:
         run: |
           echo "🚀 Deploying to staging environment..."
           echo "✅ Staging deployment simulation completed successfully!"
-          echo "📦 Docker image: ghcr.io/${{ github.repository }}:${{ github.sha }}"
+          echo "📦 Docker image built locally: ${{ env.DOCKER_IMAGE }}:latest"
+          echo ""
+          echo "🔧 To enable container registry pushes, you need to:"
+          echo "   1. Go to Settings → Actions → General"
+          echo "   2. Enable 'Read and write permissions' for Actions"
+          echo "   3. Or use a Personal Access Token with 'write:packages' scope"
+          echo ""
           echo "🔧 Add your actual deployment commands here:"
           echo "   - kubectl apply -f k8s/staging/"
           echo "   - docker-compose -f docker-compose.staging.yml up -d"
@@ -68,7 +73,13 @@ jobs:
         run: |
           echo "🚀 Deploying to production environment..."
           echo "✅ Production deployment simulation completed successfully!"
-          echo "📦 Docker image: ghcr.io/${{ github.repository }}:${{ github.sha }}"
+          echo "📦 Docker image built locally: ${{ env.DOCKER_IMAGE }}:latest"
+          echo ""
+          echo "🔧 To enable container registry pushes, you need to:"
+          echo "   1. Go to Settings → Actions → General"
+          echo "   2. Enable 'Read and write permissions' for Actions"
+          echo "   3. Or use a Personal Access Token with 'write:packages' scope"
+          echo ""
           echo "🔧 Add your actual deployment commands here:"
           echo "   - kubectl apply -f k8s/production/"
           echo "   - docker-compose -f docker-compose.production.yml up -d"
