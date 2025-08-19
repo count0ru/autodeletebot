@@ -1,0 +1,33 @@
+[Unit]
+Description=Auto-Delete Telegram Bot
+Documentation=https://github.com/count0ru/autodeletebot
+After=network.target docker.service
+Requires=docker.service
+Wants=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=root
+Group=root
+WorkingDirectory=/opt/autodeletebot
+ExecStart=/usr/bin/docker-compose -f /opt/autodeletebot/deployment/docker-compose/docker-compose.yml up -d
+ExecStop=/usr/bin/docker-compose -f /opt/autodeletebot/deployment/docker-compose/docker-compose.yml down
+ExecReload=/usr/bin/docker-compose -f /opt/autodeletebot/deployment/docker-compose/docker-compose.yml restart
+TimeoutStartSec=0
+Restart=on-failure
+RestartSec=10
+
+# Environment variables
+Environment=COMPOSE_PROJECT_NAME=autodeletebot
+Environment=COMPOSE_FILE=/opt/autodeletebot/deployment/docker-compose/docker-compose.yml
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/autodeletebot/data /opt/autodeletebot/logs /opt/autodeletebot/config
+
+[Install]
+WantedBy=multi-user.target

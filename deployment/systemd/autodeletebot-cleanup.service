@@ -1,0 +1,25 @@
+[Unit]
+Description=Auto-Delete Bot Cleanup Service
+Documentation=https://github.com/count0ru/autodeletebot
+After=autodeletebot.service
+Requires=autodeletebot.service
+
+[Service]
+Type=oneshot
+User=autodeletebot
+Group=autodeletebot
+WorkingDirectory=/opt/autodeletebot
+ExecStart=/usr/bin/docker exec autodeletebot-prod python3 cleanup_script.py
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=autodeletebot-cleanup
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/autodeletebot/data /opt/autodeletebot/logs
+
+[Install]
+WantedBy=multi-user.target

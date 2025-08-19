@@ -187,7 +187,7 @@ jobs:
             fi
           fi
       - name: Upload status report
-        uses: actions/upload-artifact@v4  # Using latest v4 version
+        uses: actions/upload-artifact@v4 # Using latest v4 version
         with:
           name: status-report
           path: status-report.md

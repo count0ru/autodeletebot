@@ -29,15 +29,83 @@ A Python-based Telegram bot that automatically deletes messages from your channe
 
 ## Installation
 
-### 1. Clone or Download the Project
+### **Option 1: Docker Compose + Systemd (Recommended for Production)**
 
+#### 1. Clone the Project
 ```bash
 git clone <your-repo-url>
 cd autodeletebot
 ```
 
-### 2. Run the Setup Script
+#### 2. Run the Installation Script
+```bash
+# Install to default location (/opt/autodeletebot) with production config
+sudo deployment/install.sh
 
+# Install to custom location
+sudo deployment/install.sh --dest /home/user/bot
+
+# Install with development configuration
+sudo deployment/install.sh --env dev
+
+# Install to custom location with development config
+sudo deployment/install.sh --dest /home/user/bot --env dev
+
+# Show help
+deployment/install.sh --help
+```
+
+#### 3. Configure the Bot
+Edit the environment file with your bot credentials:
+```bash
+sudo nano /opt/autodeletebot/deployment/docker-compose/.env
+```
+
+Fill in:
+- `BOT_TOKEN`: Your bot token from @BotFather
+- `CHANNEL_ID`: Your channel ID (get this by forwarding a message to @userinfobot)
+- `USER_ID`: Your Telegram user ID (get this by sending /start to @userinfobot)
+- `USER_USERNAME`: Your Telegram username (alternative to USER_ID)
+
+#### 4. Start the Service
+```bash
+# Start the bot
+sudo /opt/autodeletebot/deployment/manage.sh start
+
+# Check status
+sudo /opt/autodeletebot/deployment/manage.sh status
+
+# View logs
+sudo /opt/autodeletebot/deployment/manage.sh logs-follow
+```
+
+#### 5. Management Commands
+```bash
+# Service control
+sudo /opt/autodeletebot/deployment/manage.sh start     # Start service
+sudo /opt/autodeletebot/deployment/manage.sh stop      # Stop service
+sudo /opt/autodeletebot/deployment/manage.sh restart   # Restart service
+
+# Monitoring
+sudo /opt/autodeletebot/deployment/manage.sh status   # Show status
+sudo /opt/autodeletebot/deployment/manage.sh logs     # Show logs
+sudo /opt/autodeletebot/deployment/manage.sh logs-follow # Follow logs
+
+# Maintenance
+sudo /opt/autodeletebot/deployment/manage.sh backup   # Backup data
+sudo /opt/autodeletebot/deployment/manage.sh cleanup  # Run cleanup manually
+sudo /opt/autodeletebot/deployment/manage.sh update   # Update bot image
+```
+
+### **Option 2: Traditional Setup (Development)**
+
+#### 1. Clone or Download the Project
+```bash
+git clone <your-repo-url>
+cd autodeletebot
+```
+
+#### 2. Run the Setup Script
 ```bash
 chmod +x setup.sh
 ./setup.sh
@@ -50,10 +118,8 @@ The setup script will:
 - Set up a cron job for automatic cleanup
 - Make scripts executable
 
-### 3. Configure the Bot
-
+#### 3. Configure the Bot
 Edit the `.env` file with your bot credentials:
-
 ```bash
 nano .env
 ```
@@ -64,11 +130,36 @@ Fill in:
 - `USER_ID`: Your Telegram user ID (get this by sending /start to @userinfobot)
 - `USER_USERNAME`: Your Telegram username (alternative to USER_ID)
 
-### 4. Set Up Bot Permissions
+#### 4. Set Up Bot Permissions
 
 1. Add your bot to your channel as an admin
 2. Give the bot permission to delete messages
 3. Make sure the bot can read channel messages
+
+## 🐳 **Docker & Deployment**
+
+### **Docker Compose Configurations**
+
+The project includes multiple Docker Compose configurations for different environments:
+
+- **`docker-compose.yml`** - Main configuration (auto-selected based on environment)
+- **`docker-compose.dev.yml`** - Development setup with debug logging and source mounting
+- **`docker-compose.prod.yml`** - Production setup with security and resource limits
+
+### **Systemd Services**
+
+Automated systemd service installation with:
+
+- **`autodeletebot.service`** - Main bot service
+- **`autodeletebot-cleanup.service`** - Cleanup script service
+- **`autodeletebot-cleanup.timer`** - Automated cleanup scheduling (every 12 hours)
+
+### **Installation & Management**
+
+- **`install.sh`** - Automated installation script with environment selection
+- **`manage.sh`** - Service management and monitoring script
+- **Automatic user/group creation** with proper permissions
+- **Production-ready directory structure** at `/opt/autodeletebot`
 
 ## Development with Makefile
 

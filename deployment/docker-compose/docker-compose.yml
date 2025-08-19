@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  autodeletebot:
+    image: autodeletebot:latest
+    container_name: autodeletebot
+    restart: unless-stopped
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - CHANNEL_ID=${CHANNEL_ID}
+      - USER_ID=${USER_ID}
+      - USER_USERNAME=${USER_USERNAME}
+      - DELETE_AFTER_DAYS=${DELETE_AFTER_DAYS:-60}
+      - CHECK_INTERVAL_MINUTES=${CHECK_INTERVAL_MINUTES:-720}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FILE=/app/logs/bot.log
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config:/app/config
+    ports:
+      - "8080:8080"
+    networks:
+      - autodeletebot-network
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import sqlite3; sqlite3.connect('/app/data/messages.db')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    depends_on:
+      - cleanup-cron
+
+  cleanup-cron:
+    image: autodeletebot:latest
+    container_name: autodeletebot-cleanup
+    restart: unless-stopped
+    command: ["python3", "cleanup_script.py"]
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - CHANNEL_ID=${CHANNEL_ID}
+      - USER_ID=${USER_ID}
+      - USER_USERNAME=${USER_USERNAME}
+      - DELETE_AFTER_DAYS=${DELETE_AFTER_DAYS:-60}
+      - CHECK_INTERVAL_MINUTES=${CHECK_INTERVAL_MINUTES:-720}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - LOG_FILE=/app/logs/cleanup.log
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./config:/app/config
+    networks:
+      - autodeletebot-network
+    profiles:
+      - production
+
+networks:
+  autodeletebot-network:
+    driver: bridge
+    name: autodeletebot-network
+
+volumes:
+  data:
+    driver: local
+  logs:
+    driver: local
+  config:
+    driver: local

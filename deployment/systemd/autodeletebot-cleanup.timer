@@ -1,0 +1,14 @@
+[Unit]
+Description=Auto-Delete Bot Cleanup Timer
+Documentation=https://github.com/count0ru/autodeletebot
+Requires=autodeletebot.service
+
+[Timer]
+# Run every 12 hours (720 minutes)
+OnCalendar=*-*-* 00:00:00
+OnCalendar=*-*-* 12:00:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
