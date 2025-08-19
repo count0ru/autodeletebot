@@ -14,6 +14,9 @@ services:
       - CHECK_INTERVAL_MINUTES=${CHECK_INTERVAL_MINUTES:-720}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FILE=/app/logs/bot.log
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     volumes:
       - autodeletebot-data:/app/data
       - autodeletebot-logs:/app/logs
@@ -56,6 +59,9 @@ services:
       - CHECK_INTERVAL_MINUTES=${CHECK_INTERVAL_MINUTES:-720}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - LOG_FILE=/app/logs/cleanup.log
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     volumes:
       - autodeletebot-data:/app/data
       - autodeletebot-logs:/app/logs
@@ -80,7 +86,7 @@ networks:
   autodeletebot-prod-network:
     driver: bridge
     name: autodeletebot-prod-network
-    internal: true  # No external access
+    # internal: true  # Removed - was blocking external internet access
 
 volumes:
   autodeletebot-data:
