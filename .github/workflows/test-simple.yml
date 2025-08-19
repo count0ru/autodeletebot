@@ -1,0 +1,35 @@
+name: Simple Test
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  test:
+    name: Simple Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-test.txt
+      - name: Run basic tests
+        run: |
+          echo "🧪 Running basic tests..."
+          python -m pytest tests/ -v --tb=short
+      - name: Check code quality
+        run: |
+          echo "🔍 Running pylint..."
+          pip install pylint
+          pylint --rcfile .pylintrc *.py --score=y
+      - name: Success message
+        run: |
+          echo "✅ Simple test completed successfully!"
+          echo "🚀 Ready to run full CI/CD pipeline!"
