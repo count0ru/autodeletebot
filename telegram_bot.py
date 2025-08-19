@@ -24,7 +24,7 @@ class AutoDeleteBot:
         """Handle /start command"""
         await update.message.reply_text(
             "🤖 Auto-Delete Bot is running!\n\n"
-            "Forward any message from your channel to me, and I'll automatically delete it after 30 days.\n\n"
+            "Forward any message from your channel to me, and I'll automatically delete it after 60 days.\n\n"
             "Use /help for more information."
         )
 
@@ -67,7 +67,7 @@ class AutoDeleteBot:
 **Total messages tracked:** {total_messages}
 **Pending deletion:** {pending_deletion}
 **Next cleanup:** Every 12 hours
-**Deletion delay:** 30 days
+**Deletion delay:** 60 days
 
 Bot is running and monitoring messages.
             """
@@ -106,7 +106,7 @@ Bot is running and monitoring messages.
             # Add to database for future deletion
             if self.db.add_message(original_message_id, message.forward_from_chat.id, forward_date):
                 await message.reply_text(
-                    f"✅ Message scheduled for deletion on {forward_date + datetime.timedelta(days=30)}"
+                    f"✅ Message scheduled for deletion on {forward_date + datetime.timedelta(minutes=config.DELETE_AFTER_MINUTES)}"
                 )
                 logger.info(
                     "Message %s from channel %s scheduled for deletion",
@@ -156,7 +156,8 @@ Bot is running and monitoring messages.
             self.application.add_handler(CommandHandler("help", self.help_command))
             self.application.add_handler(CommandHandler("status", self.status_command))
             self.application.add_handler(CommandHandler("cleanup", self.cleanup_command))
-            self.application.add_handler(MessageHandler(filters.ALL, self.handle_forwarded_message))
+            # Only handle forwarded messages, not all messages
+            self.application.add_handler(MessageHandler(filters.FORWARDED, self.handle_forwarded_message))
 
             logger.info("Bot started successfully")
 
