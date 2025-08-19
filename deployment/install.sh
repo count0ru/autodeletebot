@@ -19,6 +19,7 @@ INSTALL_DIR=""
 ENVIRONMENT=""
 SERVICE_USER="autodeletebot"
 SERVICE_GROUP="autodeletebot"
+UNINSTALL_MODE=false
 
 # Function to show usage
 show_usage() {
@@ -30,6 +31,7 @@ show_usage() {
     echo "Options:"
     echo "  --dest PATH     Installation directory (default: $DEFAULT_INSTALL_DIR)"
     echo "  --env ENV       Environment: dev, prod (default: $DEFAULT_ENV)"
+    echo "  --uninstall     Uninstall the bot and remove all files"
     echo "  --help, -h      Show this help message"
     echo ""
     echo "Examples:"
@@ -37,6 +39,8 @@ show_usage() {
     echo "  $0 --dest /opt/autodeletebot         # Install to specific directory"
     echo "  $0 --env dev                         # Install with development configuration"
     echo "  $0 --dest /home/user/bot --env dev   # Install to custom location with dev config"
+    echo "  $0 --uninstall                       # Uninstall from default location"
+    echo "  $0 --dest /home/user/bot --uninstall # Uninstall from custom location"
     echo ""
     echo "Environments:"
     echo "  dev   - Development setup with debug logging and source code mounting"
@@ -56,6 +60,10 @@ parse_arguments() {
             --env)
                 ENVIRONMENT="$2"
                 shift 2
+                ;;
+            --uninstall)
+                UNINSTALL_MODE=true
+                shift
                 ;;
             --help|-h)
                 show_usage
@@ -294,8 +302,159 @@ show_completion() {
     echo -e "${GREEN}🚀 Your Auto-Delete Bot is ready to deploy!${NC}"
 }
 
+# Function to uninstall the bot
+uninstall_bot() {
+    echo -e "${BLUE}🗑️  Uninstalling Auto-Delete Bot...${NC}"
+    echo "====================================="
+    echo ""
+    echo -e "${BLUE}Configuration:${NC}"
+    echo "   Installation Directory: $INSTALL_DIR"
+    echo "   Service User: $SERVICE_USER"
+    echo "   Service Group: $SERVICE_GROUP"
+    echo ""
+    
+    # Check if running as root
+    if [[ $EUID -ne 0 ]]; then
+        echo -e "${RED}❌ This script must be run with sudo privileges${NC}"
+        echo "Please run: sudo $0 --uninstall [OPTIONS]"
+        exit 1
+    fi
+    
+    # Check if installation directory exists
+    if [ ! -d "$INSTALL_DIR" ]; then
+        echo -e "${YELLOW}⚠️  Installation directory not found: $INSTALL_DIR${NC}"
+        echo "Nothing to uninstall."
+        exit 0
+    fi
+    
+    echo -e "${YELLOW}⚠️  This will permanently remove:${NC}"
+    echo "   - All bot files and data"
+    echo "   - Systemd services"
+    echo "   - Docker containers and volumes"
+    echo "   - Service user and group"
+    echo ""
+    
+    # Ask for confirmation
+    read -p "Are you sure you want to continue? (yes/no): " confirm
+    if [[ "$confirm" != "yes" ]]; then
+        echo -e "${YELLOW}❌ Uninstallation cancelled${NC}"
+        exit 0
+    fi
+    
+    echo ""
+    echo -e "${BLUE}🛑 Stopping and removing services...${NC}"
+    
+    # Stop and disable systemd services
+    if systemctl is-active --quiet autodeletebot.service 2>/dev/null; then
+        systemctl stop autodeletebot.service
+        echo "✅ Stopped autodeletebot.service"
+    fi
+    
+    if systemctl is-active --quiet autodeletebot-cleanup.timer 2>/dev/null; then
+        systemctl stop autodeletebot-cleanup.timer
+        echo "✅ Stopped autodeletebot-cleanup.timer"
+    fi
+    
+    if systemctl is-enabled --quiet autodeletebot.service 2>/dev/null; then
+        systemctl disable autodeletebot.service
+        echo "✅ Disabled autodeletebot.service"
+    fi
+    
+    if systemctl is-enabled --quiet autodeletebot-cleanup.timer 2>/dev/null; then
+        systemctl disable autodeletebot-cleanup.timer
+        echo "✅ Disabled autodeletebot-cleanup.timer"
+    fi
+    
+    echo -e "${BLUE}🐳 Stopping and removing Docker containers...${NC}"
+    
+    # Stop and remove Docker containers
+    if [ -f "$INSTALL_DIR/deployment/docker-compose/docker-compose.yml" ]; then
+        cd "$INSTALL_DIR/deployment/docker-compose"
+        
+        # Determine Docker Compose command
+        if command -v docker-compose &> /dev/null; then
+            DOCKER_COMPOSE_CMD="docker-compose"
+        else
+            DOCKER_COMPOSE_CMD="docker compose"
+        fi
+        
+        # Stop containers
+        if $DOCKER_COMPOSE_CMD ps -q | grep -q .; then
+            $DOCKER_COMPOSE_CMD down -v
+            echo "✅ Stopped and removed Docker containers and volumes"
+        else
+            echo "ℹ️  No running containers found"
+        fi
+    fi
+    
+    echo -e "${BLUE}🗂️  Removing systemd service files...${NC}"
+    
+    # Remove systemd service files
+    if [ -f "/etc/systemd/system/autodeletebot.service" ]; then
+        rm -f /etc/systemd/system/autodeletebot.service
+        echo "✅ Removed autodeletebot.service"
+    fi
+    
+    if [ -f "/etc/systemd/system/autodeletebot-cleanup.service" ]; then
+        rm -f /etc/systemd/system/autodeletebot-cleanup.service
+        echo "✅ Removed autodeletebot-cleanup.service"
+    fi
+    
+    if [ -f "/etc/systemd/system/autodeletebot-cleanup.timer" ]; then
+        rm -f /etc/systemd/system/autodeletebot-cleanup.timer
+        echo "✅ Removed autodeletebot-cleanup.timer"
+    fi
+    
+    # Reload systemd
+    systemctl daemon-reload
+    echo "✅ Reloaded systemd daemon"
+    
+    echo -e "${BLUE}👤 Removing service user and group...${NC}"
+    
+    # Remove service user and group
+    if id "$SERVICE_USER" &>/dev/null; then
+        userdel -r "$SERVICE_USER" 2>/dev/null || userdel "$SERVICE_USER"
+        echo "✅ Removed service user: $SERVICE_USER"
+    fi
+    
+    if getent group "$SERVICE_GROUP" &>/dev/null; then
+        groupdel "$SERVICE_GROUP" 2>/dev/null || true
+        echo "✅ Removed service group: $SERVICE_GROUP"
+    fi
+    
+    echo -e "${BLUE}🗑️  Removing installation directory...${NC}"
+    
+    # Remove installation directory
+    if [ -d "$INSTALL_DIR" ]; then
+        rm -rf "$INSTALL_DIR"
+        echo "✅ Removed installation directory: $INSTALL_DIR"
+    fi
+    
+    echo ""
+    echo -e "${GREEN}🎉 Uninstallation completed successfully!${NC}"
+    echo "====================================="
+    echo ""
+    echo -e "${BLUE}📋 What was removed:${NC}"
+    echo "   ✅ Systemd services (stopped, disabled, and removed)"
+    echo "   ✅ Docker containers and volumes"
+    echo "   ✅ Service user and group"
+    echo "   ✅ All bot files and data"
+    echo "   ✅ Installation directory"
+    echo ""
+    echo -e "${YELLOW}⚠️  Note:${NC}"
+    echo "   - Docker images may still exist (use 'docker images' to check)"
+    echo "   - Any external data not in the installation directory was preserved"
+    echo "   - You can reinstall anytime using: sudo $0 [OPTIONS]"
+}
+
 # Main installation function
 main() {
+    # Check if uninstall mode is enabled
+    if [ "$UNINSTALL_MODE" = true ]; then
+        uninstall_bot
+        exit 0
+    fi
+    
     echo -e "${BLUE}🚀 Auto-Delete Bot Installation Script${NC}"
     echo "=========================================="
     echo ""
