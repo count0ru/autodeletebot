@@ -105,11 +105,18 @@ check_prerequisites() {
         exit 1
     fi
     
-    # Check if Docker Compose is installed
-    if ! command -v docker-compose &> /dev/null; then
+    # Check if Docker Compose is installed (v1 or v2)
+    if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/null; then
         echo -e "${RED}❌ Docker Compose is not installed. Please install Docker Compose first.${NC}"
         echo "Installation guide: https://docs.docker.com/compose/install/"
         exit 1
+    fi
+    
+    # Determine which Docker Compose command to use
+    if command -v docker-compose &> /dev/null; then
+        DOCKER_COMPOSE_CMD="docker-compose"
+    else
+        DOCKER_COMPOSE_CMD="docker compose"
     fi
     
     # Check Docker service status
@@ -214,8 +221,18 @@ install_systemd_services() {
     cp "$INSTALL_DIR/deployment/systemd/"*.service /etc/systemd/system/
     cp "$INSTALL_DIR/deployment/systemd/"*.timer /etc/systemd/system/
     
-    # Update service files with correct paths
+    # Update service files with correct paths and Docker Compose command
     sed -i "s|/opt/autodeletebot|$INSTALL_DIR|g" /etc/systemd/system/autodeletebot*.service
+    
+    # Handle Docker Compose v1 vs v2 command structure
+    if [[ "$DOCKER_COMPOSE_CMD" == "docker compose" ]]; then
+        # For Docker Compose v2, use full path and modify command structure
+        sed -i 's|/usr/bin/docker-compose|/usr/bin/docker|g' /etc/systemd/system/autodeletebot*.service
+        sed -i 's|docker \(-f [^ ]* \)\(.*\)|docker compose \1\2|g' /etc/systemd/system/autodeletebot*.service
+    else
+        # For Docker Compose v1, keep the original structure
+        sed -i "s|/usr/bin/docker-compose|$DOCKER_COMPOSE_CMD|g" /etc/systemd/system/autodeletebot*.service
+    fi
     
     # Reload systemd
     systemctl daemon-reload
