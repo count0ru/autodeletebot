@@ -67,9 +67,10 @@ class TestMessageDatabase(unittest.TestCase):
     def test_get_messages_to_delete(self):
         """Test retrieving messages that should be deleted."""
         # Add a message with past date (should be eligible for deletion)
+        # Use 61 days to ensure it's older than the default 60 days (86400 minutes)
         message_id = 123
         chat_id = 456
-        past_date = datetime.now() - timedelta(days=31)
+        past_date = datetime.now() - timedelta(days=61)
 
         self.db.add_message(message_id, chat_id, past_date)
 

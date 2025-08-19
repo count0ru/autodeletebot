@@ -36,7 +36,8 @@ class MessageDatabase:
     def add_message(self, message_id: int, chat_id: int, forward_date: datetime.datetime):
         """Add a new message to the database"""
         try:
-            delete_date = forward_date + datetime.timedelta(days=30)
+            import config
+            delete_date = forward_date + datetime.timedelta(minutes=config.DELETE_AFTER_MINUTES)
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute('''

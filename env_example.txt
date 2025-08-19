@@ -17,6 +17,6 @@ USER_ID=your_user_id_here
 USER_USERNAME=your_username_here
 
 # Optional: Override default settings
-# DELETE_AFTER_DAYS=60
+# DELETE_AFTER_MINUTES=86400
 # CHECK_INTERVAL_MINUTES=720
 # LOG_LEVEL=INFO

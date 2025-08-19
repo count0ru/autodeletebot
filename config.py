@@ -16,7 +16,7 @@ USER_USERNAME = os.getenv('USER_USERNAME')  # Your Telegram username (alternativ
 DATABASE_PATH = 'messages.db'
 
 # Message deletion settings
-DELETE_AFTER_DAYS = int(os.getenv('DELETE_AFTER_DAYS', '60'))
+DELETE_AFTER_MINUTES = int(os.getenv('DELETE_AFTER_MINUTES', '86400'))  # 60 days in minutes
 CHECK_INTERVAL_MINUTES = int(os.getenv('CHECK_INTERVAL_MINUTES', '720'))  # 12 hours = 720 minutes
 
 # Logging configuration

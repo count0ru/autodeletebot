@@ -357,7 +357,7 @@ Tests cover:
 
 You can customize the bot behavior by editing `config.py` or setting environment variables:
 
-- `DELETE_AFTER_DAYS`: How long to wait before deleting messages (default: 60)
+- `DELETE_AFTER_MINUTES`: How long to wait before deleting messages (default: 86400 = 60 days)
 - `CHECK_INTERVAL_MINUTES`: How often to check for expired messages in minutes (default: 720)
 - `LOG_LEVEL`: Logging level (default: INFO)
 - `USER_ID`: Your Telegram user ID for deletion notifications

@@ -86,23 +86,23 @@ class TestConfig(unittest.TestCase):
         importlib.reload(config)
 
         # Check default values
-        self.assertEqual(config.DELETE_AFTER_DAYS, 60)
+        self.assertEqual(config.DELETE_AFTER_MINUTES, 86400)
         self.assertEqual(config.CHECK_INTERVAL_MINUTES, 720)
         self.assertEqual(config.LOG_LEVEL, 'INFO')
         self.assertEqual(config.DATABASE_PATH, 'messages.db')
         self.assertEqual(config.LOG_FILE, 'bot.log')
 
-    def test_custom_delete_days(self):
-        """Test custom delete days configuration."""
-        # Set custom delete days
-        os.environ['DELETE_AFTER_DAYS'] = '90'
+    def test_custom_delete_minutes(self):
+        """Test custom delete minutes configuration."""
+        # Set custom delete minutes
+        os.environ['DELETE_AFTER_MINUTES'] = '129600'  # 90 days in minutes
 
         # Reload config
         import importlib
         importlib.reload(config)
 
         # Custom value should be used
-        self.assertEqual(config.DELETE_AFTER_DAYS, 90)
+        self.assertEqual(config.DELETE_AFTER_MINUTES, 129600)
 
     def test_custom_check_interval(self):
         """Test custom check interval configuration."""

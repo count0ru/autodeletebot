@@ -36,7 +36,7 @@ class TestIntegration(unittest.TestCase):
         # 1. Add message to database
         message_id = 123
         chat_id = 456
-        forward_date = datetime.now() - timedelta(days=31)  # Past date
+        forward_date = datetime.now() - timedelta(days=61)  # Past date (older than 60 days)
 
         result = self.db.add_message(message_id, chat_id, forward_date)
         self.assertTrue(result)
@@ -64,7 +64,7 @@ class TestIntegration(unittest.TestCase):
         # Add message to database
         message_id = 789
         chat_id = 101
-        forward_date = datetime.now() - timedelta(days=31)
+        forward_date = datetime.now() - timedelta(days=61)  # Older than 60 days
 
         self.db.add_message(message_id, chat_id, forward_date)
 
@@ -92,9 +92,9 @@ class TestIntegration(unittest.TestCase):
         """Test cleanup of multiple messages."""
         # Add multiple messages with different dates
         messages_data = [
-            (111, 222, datetime.now() - timedelta(days=31)),  # Expired
+            (111, 222, datetime.now() - timedelta(days=61)),  # Expired (older than 60 days)
             (333, 444, datetime.now() - timedelta(days=15)),  # Not expired
-            (555, 666, datetime.now() - timedelta(days=32)),  # Expired
+            (555, 666, datetime.now() - timedelta(days=62)),  # Expired (older than 60 days)
         ]
 
         for message_id, chat_id, forward_date in messages_data:
@@ -115,7 +115,7 @@ class TestIntegration(unittest.TestCase):
         # Add message
         message_id = 999
         chat_id = 888
-        forward_date = datetime.now() - timedelta(days=31)
+        forward_date = datetime.now() - timedelta(days=61)  # Older than 60 days
 
         self.db.add_message(message_id, chat_id, forward_date)
 
