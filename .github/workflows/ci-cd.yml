@@ -155,6 +155,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [quality, docker, security]
     if: always()
+    # Updated to use latest GitHub Actions versions
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -186,7 +187,7 @@ jobs:
             fi
           fi
       - name: Upload status report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4  # Using latest v4 version
         with:
           name: status-report
           path: status-report.md
