@@ -101,7 +101,7 @@ python telegram_bot.py
 
 The bot will send you private messages when:
 
-✅ **Successful Deletions**: 
+✅ **Successful Deletions**:
 - Message ID and Channel ID
 - Timestamp of deletion
 - Confirmation of success
