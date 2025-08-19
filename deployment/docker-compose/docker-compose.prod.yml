@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   autodeletebot:
-    image: autodeletebot:latest
+    image: ghcr.io/count0ru/autodeletebot:latest
     container_name: autodeletebot-prod
     restart: unless-stopped
     environment:
@@ -43,7 +43,7 @@ services:
         max-file: "3"
 
   cleanup-cron:
-    image: autodeletebot:latest
+    image: ghcr.io/count0ru/autodeletebot:latest
     container_name: autodeletebot-cleanup-prod
     restart: unless-stopped
     command: ["python3", "cleanup_script.py"]

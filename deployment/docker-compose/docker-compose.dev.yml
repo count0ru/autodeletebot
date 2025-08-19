@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   autodeletebot:
-    image: autodeletebot:latest
+    image: ghcr.io/count0ru/autodeletebot:latest
     container_name: autodeletebot-dev
     restart: unless-stopped
     environment:
@@ -33,7 +33,7 @@ services:
     command: ["python3", "-u", "telegram_bot.py"]  # Unbuffered output for logs
 
   cleanup-cron:
-    image: autodeletebot:latest
+    image: ghcr.io/count0ru/autodeletebot:latest
     container_name: autodeletebot-cleanup-dev
     restart: unless-stopped
     command: ["python3", "-u", "cleanup_script.py"]
