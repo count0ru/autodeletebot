@@ -165,7 +165,7 @@ jobs:
             echo "❌ Some checks failed. Please review the logs." >> status-report.md
           fi
       - name: Upload status report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: status-report
           path: status-report.md
