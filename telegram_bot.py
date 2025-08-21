@@ -22,11 +22,18 @@ class AutoDeleteBot:
 
     async def start_command(self, update: Update, _context: ContextTypes.DEFAULT_TYPE):
         """Handle /start command"""
-        await update.message.reply_text(
-            "🤖 Auto-Delete Bot is running!\n\n"
-            "Forward any message from your channel to me, and I'll automatically delete it after 60 days.\n\n"
-            "Use /help for more information."
-        )
+        try:
+            if not update or not update.message:
+                logger.warning("Start command received but no message in update")
+                return
+                
+            await update.message.reply_text(
+                "🤖 Auto-Delete Bot is running!\n\n"
+                "Forward any message from your channel to me, and I'll automatically delete it after 60 days.\n\n"
+                "Use /help for more information."
+            )
+        except Exception as e:
+            logger.error("Error in start command: %s", e)
 
     async def help_command(self, update: Update, _context: ContextTypes.DEFAULT_TYPE):
         """Handle /help command"""
@@ -41,12 +48,15 @@ class AutoDeleteBot:
 
 **How to use:**
 1. Forward any message from your Telegram channel to this bot
-2. The bot will automatically schedule it for deletion after 30 days
+2. The bot will automatically schedule it for deletion after 60 days
 3. Messages are checked every 12 hours and deleted when their time is up
 
 **Note:** The bot must be an admin in your channel with delete message permissions.
         """
-        await update.message.reply_text(help_text, parse_mode='Markdown')
+        try:
+            await update.message.reply_text(help_text, parse_mode='Markdown')
+        except Exception as e:
+            logger.error("Error in help command: %s", e)
 
     async def status_command(self, update: Update, _context: ContextTypes.DEFAULT_TYPE):
         """Handle /status command"""
@@ -88,19 +98,29 @@ Bot is running and monitoring messages.
     async def handle_forwarded_message(self, update: Update, _context: ContextTypes.DEFAULT_TYPE):
         """Handle forwarded messages from the channel"""
         try:
+            # Check if update has a message
+            if not update or not update.message:
+                logger.debug("Update or message is None, skipping")
+                return
+
             message = update.message
 
             # Check if this is a forwarded message
             if not message.forward_from_chat:
+                logger.debug("Message is not forwarded, skipping")
                 return
 
             # Check if it's from the configured channel
             if str(message.forward_from_chat.id) != config.CHANNEL_ID:
-                await message.reply_text("❌ This message is not from the configured channel.")
+                logger.debug("Message not from configured channel: %s", message.forward_from_chat.id)
                 return
 
             # Get the original message ID and forward date
             original_message_id = message.forward_from_message_id
+            if not original_message_id:
+                logger.warning("Forwarded message missing message ID")
+                return
+
             forward_date = message.forward_date or datetime.datetime.now()
 
             # Add to database for future deletion
@@ -117,7 +137,12 @@ Bot is running and monitoring messages.
 
         except Exception as e:
             logger.error("Error handling forwarded message: %s", e)
-            await update.message.reply_text("❌ Error processing message. Check logs for details.")
+            # Only try to reply if we have a valid message
+            if update and update.message:
+                try:
+                    await update.message.reply_text("❌ Error processing message. Check logs for details.")
+                except Exception as reply_error:
+                    logger.error("Failed to send error reply: %s", reply_error)
 
     async def delete_expired_messages(self):
         """Delete all expired messages from the channel"""
