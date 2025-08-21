@@ -26,7 +26,7 @@ class AutoDeleteBot:
             if not update or not update.message:
                 logger.warning("Start command received but no message in update")
                 return
-                
+
             await update.message.reply_text(
                 "🤖 Auto-Delete Bot is running!\n\n"
                 "Forward any message from your channel to me, and I'll automatically delete it after 60 days.\n\n"
